@@ -1,13 +1,10 @@
-module database_connection
+module cimenteiro
 
-import mysql
-
-#flag -I/usr/include/mysql
-struct ClassDao {
+pub struct Builder {
 mut:
-	columns    [][]string
-	table_name string
-	connection mysql.DB
+	table_name  string
+	query_type QueryType =.qselect
+	query_args []FieldValue
 }
 
 fn generate_item(values map[string]string) string {
@@ -18,55 +15,38 @@ fn generate_item(values map[string]string) string {
 	return generated_items
 }
 
-pub fn result_string_array(result mysql.Result) [][]string {
-	mut query_result := [[]string{}]
-	for row in result.rows() {
-		query_result << row.vals
-	}
-	result.free()
-	return query_result
-}
-
-fn (dao ClassDao) create() ?bool {
-	mut sql_command := 'CREATE TABLE $dao.table_name (id int PRIMARY KEY AUTO_INCREMENT);'
-	dao.connection.query(sql_command) or {
-		return error(err)
-	}
-	return true
-}
-
-pub fn (dao ClassDao) add_column(column_name, datatype string) {
-	dao.connection.query('ALTER TABLE $dao.table_name ADD $column_name $datatype;') or {
+pub fn (builder Builder) add_column(column_name, datatype string) {
+	builder.connection.query('ALTER TABLE $builder.table_name ADD $column_name $datatype;') or {
 		eprintln(err)
 	}
 }
 
-pub fn (dao ClassDao) drop_column(column_name string) {
-	dao.connection.query('ALTER TABLE $dao.table_name DROP COLUMN $column_name;') or {
+pub fn (builder Builder) drop_column(column_name string) {
+	builder.connection.query('ALTER TABLE $builder.table_name DROP COLUMN $column_name;') or {
 		eprintln(err)
 	}
 }
 
-pub fn (dao ClassDao) modify_column(column_name, datatype string) {
-	dao.connection.query('ALTER TABLE $dao.table_name MODIFY COLUMN $column_name $datatype;') or {
+pub fn (builder Builder) modify_column(column_name, datatype string) {
+	builder.connection.query('ALTER TABLE $builder.table_name MODIFY COLUMN $column_name $datatype;') or {
 		eprintln(err)
 	}
 }
 
-pub fn (dao ClassDao) add_foreign_key(column_name, table_name, table_id string) {
-	dao.connection.query('ALTER TABLE $dao.table_name ADD CONSTRAINT FK_$dao.table_name$table_name FOREIGN KEY ($column_name) REFERENCES ${table_name}($table_id);') or {
+pub fn (builder Builder) add_foreign_key(column_name, table_name, table_id string) {
+	builder.connection.query('ALTER TABLE $builder.table_name ADD CONSTRAINT FK_$builder.table_name$table_name FOREIGN KEY ($column_name) REFERENCES ${table_name}($table_id);') or {
 		eprintln(err)
 	}
 }
 
-pub fn (dao ClassDao) drop_foreign_key(table_name string) {
-	dao.connection.query('ALTER TABLE $dao.table_name DROP FOREIGN KEY FK_$dao.table_name$table_name;') or {
+pub fn (builder Builder) drop_foreign_key(table_name string) {
+	builder.connection.query('ALTER TABLE $builder.table_name DROP FOREIGN KEY FK_$builder.table_name$table_name;') or {
 		eprintln(err)
 	}
 }
 
-pub fn (dao ClassDao) update(columns, values []string, where string) ?bool {
-	mut sql_command := 'UPDATE $dao.table_name SET'
+pub fn (builder Builder) update(columns, values []string, where string) ?bool {
+	mut sql_command := 'UPDATE $builder.table_name SET'
 	for count := 0; count < columns.len; count += 1 {
 		if count > 0 {
 			sql_command += ','
@@ -78,45 +58,45 @@ pub fn (dao ClassDao) update(columns, values []string, where string) ?bool {
 	if where.len > 2 {
 		sql_command += ' WHERE $where'
 	}
-	dao.connection.query(sql_command) or {
+	builder.connection.query(sql_command) or {
 		return error(err)
 	}
 	return true
 }
 
-pub fn (dao ClassDao) insert(names, values []string) ?bool {
-	mut sql_command := 'INSERT INTO ' + dao.table_name + '('
+pub fn (builder Builder) insert(names, values []string) ?bool {
+	mut sql_command := 'INSERT INTO ' + builder.table_name + '('
 	sql_command += names.join(',') + ') VALUES(' + values.join(',') + ')'
-	dao.connection.query(sql_command) or {
+	builder.connection.query(sql_command) or {
 		return error(err)
 	}
 	return true
 }
 
-pub fn (dao ClassDao) select_columns(columns []string, conditions map[string]string) ?[][]string {
-	result := dao.connection.query('SELECT ' + columns.join(',') + ' FROM $dao.table_name' + generate_item(conditions)) or {
+pub fn (builder Builder) select_columns(columns []string, conditions map[string]string) ?[][]string {
+	result := builder.connection.query('SELECT ' + columns.join(',') + ' FROM $builder.table_name' + generate_item(conditions)) or {
 		return error(err)
 	}
-	return result_string_array(result)
+	return [][]string{}
 }
 
-pub fn (dao ClassDao) select_all(where, conditions string) ?[][]string {
-	mut sql_command := 'SELECT * FROM $dao.table_name'
+pub fn (builder Builder) select_all(where, conditions string) ?[][]string {
+	mut sql_command := 'SELECT * FROM $builder.table_name'
 	if where.len > 2 {
 		sql_command += ' WHERE $where'
 	}
 	if conditions.len > 2 {
 		sql_command += conditions
 	}
-	result := dao.connection.query(sql_command) or {
+	result := builder.connection.query(sql_command) or {
 		return error(err)
 	}
-	return result_string_array(result)
+	return [][]string{}
 }
 
-pub fn (dao ClassDao) delete(condition string) ?bool {
-	sql_command := 'DELETE FROM ' + dao.table_name + ' WHERE ' + condition + ';'
-	dao.connection.query(sql_command) or {
+pub fn (builder Builder) delete(condition string) ?bool {
+	sql_command := 'DELETE FROM ' + builder.table_name + ' WHERE ' + condition + ';'
+	builder.connection.query(sql_command) or {
 		return error(err)
 	}
 	return true

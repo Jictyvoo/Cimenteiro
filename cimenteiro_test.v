@@ -1,9 +1,12 @@
-module main
+module cimenteiro
 
-import database_connection
+fn test_migration() {
+	assert false == true
+	assert cimenteiro.new_migration("a_test").table_name == "a_test"
+}
 
-fn main() {
-	mut db := database_connection.create_connection('remotemysql.com', 'OBx64VGjgM', 'Bi3NXOeAst', 'OBx64VGjgM')?
+/*fn test_nani() {
+	mut db := cimenteiro.create_connection('remotemysql.com', 'OBx64VGjgM', 'Bi3NXOeAst', 'OBx64VGjgM')?
 	test_dao := db.generate_dao("Testsdsdse")?
 	test_dao.delete("id IS NULL")?
 	test_dao.update(["nome", "capacidade"], ["Odivio", "Testador"], "id = 2")?
@@ -18,4 +21,4 @@ fn main() {
 	other_result = test_dao.select_all("", "")?
 	println(other_result)
 	db.end()
-}
+}*/
