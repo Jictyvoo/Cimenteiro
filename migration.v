@@ -15,6 +15,13 @@ struct Migration {
 		fields     []Field
 }
 
+/*add modifications in table, like
+* ADD
+* DROP
+* MODIFY
+* ADD CONSTRAINT FK_
+* DROP FOREIGN KEY FK_
+*/
 pub fn (mut migration Migration) field(name string, ftype DataType, size string) &Field {
 	migration.fields << Field{
 		name: name
@@ -43,9 +50,9 @@ fn (field Field) build() string {
 	return '$field.name $field.data_type.str()'
 }
 
-pub fn (migration Migration) create(column_names, column_datatypes []string) ? {
+pub fn (migration Migration) end() {
 	mut sql_command := 'CREATE TABLE $migration.table_name ('
-	for index := 0; index < migration.fields; index += 1 {
+	for index := 0; index < migration.fields.len; index++ {
 		if index > 0 {
 			sql_command += ','
 		}

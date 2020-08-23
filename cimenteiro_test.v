@@ -1,8 +1,7 @@
 module cimenteiro
 
 fn test_migration() {
-	assert false == true
-	assert cimenteiro.new_migration("a_test").table_name == "a_test"
+	assert cimenteiro.migration("a_test").table_name == "a_test"
 }
 
 /*fn test_nani() {

@@ -2,7 +2,7 @@ module cimenteiro
 
 enum QueryType {
 	insert
-	qselect
+	select_
 	update
 	delete
 }
